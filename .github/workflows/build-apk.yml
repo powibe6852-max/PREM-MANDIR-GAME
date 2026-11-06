@@ -1,0 +1,65 @@
+name: Build Prem Mandir APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Prepare web assets (join game parts + localise libs)
+        run: bash scripts/prepare_www.sh
+
+      - name: Install Capacitor
+        run: npm install --no-audit --no-fund
+
+      - name: Create Android project
+        run: npx cap add android
+
+      - name: Patch Android project (permissions, icon, fullscreen)
+        run: bash scripts/patch_android.sh
+
+      - name: Sync web assets
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Rename APK
+        run: |
+          mkdir -p out
+          cp android/app/build/outputs/apk/debug/app-debug.apk out/PremMandirDiwali.apk
+          ls -lh out
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: PremMandirDiwali-apk
+          path: out/PremMandirDiwali.apk
+
+      - name: Publish to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: build-${{ github.run_number }}
+          name: Prem Mandir Diwali build ${{ github.run_number }}
+          files: out/PremMandirDiwali.apk
