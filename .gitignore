@@ -1,5 +1,5 @@
-node_modules/
-android/
-www/
-out/
-logs/
+/node_modules/
+/android/
+/www/
+/out/
+/logs/

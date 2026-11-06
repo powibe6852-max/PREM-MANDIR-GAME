@@ -22,12 +22,18 @@ open(p,"w",encoding="utf-8").write(s)
 print("manifest patched")
 PY
 
-# icons (legacy png icons for every density)
-rm -rf $A/res/mipmap-anydpi-v26
-for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
-  mkdir -p $A/res/mipmap-$d
-  cp resources/android/mipmap-$d/*.png $A/res/mipmap-$d/
-done
+# icons (optional - if folder missing, default icon is kept)
+if [ -d resources/icons ]; then
+  rm -rf $A/res/mipmap-anydpi-v26
+  for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
+    if ls resources/icons/mipmap-$d/*.png >/dev/null 2>&1; then
+      mkdir -p $A/res/mipmap-$d
+      cp resources/icons/mipmap-$d/*.png $A/res/mipmap-$d/
+    fi
+  done
+else
+  echo "resources/icons not found - keeping default icon"
+fi
 
 # fullscreen + keep screen on
 D=$A/java/com/premmandir/diwali
