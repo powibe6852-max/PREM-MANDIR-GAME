@@ -13,7 +13,7 @@ let tt;function toast(t){const e=$('toast');e.textContent=t;e.classList.add('sho
 const upd=()=>$('coins').textContent='∞';
 /* ---------- renderer ---------- */
 const cv=$('game'),rd=new THREE.WebGLRenderer({canvas:cv,antialias:true,powerPreference:'high-performance'});
-rd.shadowMap.enabled=true;rd.shadowMap.type=THREE.PCFSoftShadowMap;rd.toneMapping=THREE.ACESFilmicToneMapping;rd.toneMappingExposure=1.12;
+rd.shadowMap.enabled=true;rd.shadowMap.type=THREE.PCFShadowMap;rd.shadowMap.autoUpdate=false;rd.toneMapping=THREE.ACESFilmicToneMapping;rd.toneMappingExposure=1.12;
 const sc=new THREE.Scene();sc.fog=new THREE.Fog(0x593373,60,330);
 const cam=new THREE.PerspectiveCamera(58,1,.3,1400);
 const GF={Low:{d:.75,sh:0,fw:36,st:500,mx:1500},Medium:{d:1,sh:1024,fw:64,st:1200,mx:3000},High:{d:1.5,sh:2048,fw:100,st:2000,mx:5000},Ultra:{d:2,sh:4096,fw:150,st:2500,mx:7000}};
@@ -691,12 +691,13 @@ if(BC&&!FPV&&!DRG&&started&&!P.bike&&!P.boat&&!RDV&&!P.pass&&!P.seat&&!(window.A
  const ins=P.y>2&&Math.abs(P.x)<10&&P.z<-54+MZ&&P.z>-70+MZ,gta=!!BC&&!FPV&&!P.bike,gg=gta?gcam(dt,ins):null,dd=gg?gg.d:(ins?Math.min(CD,5.5):CD)+(P.bike?bikeV*.1:0),pit=gg?gg.p:CP,pvy=gg?gg.y:P.y+1.5,pc=Math.cos(pit);cp.set(P.x+Math.sin(CY)*pc*dd,pvy+Math.sin(pit)*dd,P.z+Math.cos(CY)*pc*dd);const fpOn=!!FPV&&!P.bike&&!P.boat&&!RDV&&!P.pass&&!P.seat&&!(window.AQ&&AQ.st>0);if(fpOn!==window.__fpPrev){window.__fpPrev=fpOn;P.c.g.visible=!fpOn}
 if(fpOn){const hy=P.y+1.62,pc2=Math.cos(CP);cam.position.set(P.x,hy,P.z);cl.set(P.x-Math.sin(CY)*pc2,hy-Math.sin(CP),P.z-Math.cos(CY)*pc2);cam.lookAt(cl)}else{if(gta)cam.position.copy(cp);else cam.position.lerp(cp,1-Math.exp(-dt*8));cam.position.y=Math.max(cam.position.y,.7,window.NW25?NW25.camMin(cam.position.x,cam.position.z):0);if(window.NW25&&NW25.shk){const s_=NW25.shk();cam.position.x+=s_[0];cam.position.y+=s_[1];cam.position.z+=s_[2]}if(gta)cl.set(P.x-Math.sin(CY)*.9,pvy-.3,P.z-Math.cos(CY)*.9);else if(BC&&!P.bike)cl.set(P.x-Math.sin(CY)*1.6,P.y+1.25,P.z-Math.cos(CY)*1.6);else cl.set(P.x,P.y+1.5,P.z);cam.lookAt(cl)}
 moon.position.set(P.x+LD.x,LD.y,P.z+LD.z);moon.target.position.set(P.x,0,P.z);skyG.position.set(P.x,0,P.z)}
-function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-frame.l||16)/1000);frame.l=now;T+=dt;gov(dt);tick(dt);
+const FR_=new THREE.Frustum(),FM_=new THREE.Matrix4(),FS_=new THREE.Sphere(new THREE.Vector3(),6);
+function frame(now){requestAnimationFrame(frame);const dt=Math.min(.05,(now-frame.l||16)/1000);frame.l=now;T+=dt;gov(dt);tick(dt);cam.updateMatrixWorld();cam.matrixWorldInverse.copy(cam.matrixWorld).invert();FM_.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse);FR_.setFromProjectionMatrix(FM_);
 /* NPCs */
 for(const n of npcs){let v=0;if(n.far&&Math.abs(n.x-P.x)+Math.abs(n.z-P.z)>160){n.c.g.visible=false;n.tag.visible=false;continue}if(!n.fix){const dx=P.x-n.x,dz=P.z-n.z,d=Math.hypot(dx,dz);if(d<3.2)n.ry=Math.atan2(dx,dz);else if(n.w>0)n.w-=dt;else{const ex=n.tx-n.x,ez=n.tz-n.z,e=Math.hypot(ex,ez);if(e<.3){n.w=1+R()*3;n.tx=n.hx+(R()-.5)*2*n.r;n.tz=n.hz+(R()-.5)*2*n.r}else{n.x+=ex/e*1.1*dt;n.z+=ez/e*1.1*dt;n.ry=Math.atan2(ex,ez);v=1.1}}
 if(n.jv||n.jy>0){n.jv-=14*dt;n.jy+=n.jv*dt;if(n.jy<=0){n.jy=0;n.jv=0}}}
-const near_=Math.hypot(n.x-P.x,n.z-P.z)<14;n.tag.visible=near_;n.c.g.visible=Math.hypot(n.x-P.x,n.z-P.z)<NPCD;
-animC(n.c,dt,v,false);n.c.g.position.set(n.x,gy(n.x,n.z)+n.jy+(n.by||0),n.z);n.c.g.rotation.y=ang(n.c.g.rotation.y,n.ry,Math.min(1,dt*8))}
+const near_=Math.hypot(n.x-P.x,n.z-P.z)<14;n.tag.visible=near_;const ny_=gy(n.x,n.z)+n.jy+(n.by||0);n.c.g.position.set(n.x,ny_,n.z);FS_.center.set(n.x,ny_+1,n.z);n.c.g.visible=Math.hypot(n.x-P.x,n.z-P.z)<NPCD&&FR_.intersectsSphere(FS_);
+if(n.c.g.visible){animC(n.c,dt,v,false);n.c.g.rotation.y=ang(n.c.g.rotation.y,n.ry,Math.min(1,dt*8))}}
 for(const[id,o]of oth)updRemote(id,o,dt);
 for(const f of EXT)f(dt);/* fireworks */
 aT-=dt;if(aT<0){aT=1.2+R()*1.8;if(NF>.3){const x=clamp(P.x+(R()-.5)*100,-80,80),z=P.z-30-R()*60;launch(x,z,40+R()*28,1)}}
@@ -713,7 +714,7 @@ PL[0].intensity=(.55+Math.sin(T*3)*.05)*NF;PL[1].color.setHSL((T*.05)%1,.9,.6);P
 hT-=dt;if(hT<0){hT=.25;const n=near();$('hint').textContent=!started?'Prem Mandir • Diwali Mela':n?(n.t==='s'?'🛍️ '+n.o.n+' — neeche button dabao':n.t==='v'?'🛺 '+n.o.dn.n+' — neeche button dabao':n.t==='g'?'💦 Ganga Ji — neeche button dabao':n.t==='gm'?'🙏 Ganga Maa ke darshan — neeche button dabao':n.t==='tm'?'🛕 '+n.o.n+' — neeche button dabao':n.t==='n'?'💬 '+n.o.n+' — neeche button dabao':'🛕 Radha-Krishna darshan — neeche button dabao'):'Prem Mandir • Diwali Mela';
 if(started){if(Math.hypot(P.x-FN[0][0],P.z-FN[0][1])<8||Math.hypot(P.x-FN[1][0],P.z-FN[1][1])<8)S.st.vis.f=1;if(P.y>2&&P.z<-42+MZ)S.st.vis.t=1;mis();if(ambG)ambG.gain.setTargetAtTime(.03+.06*clamp((P.z+10)/60,0,1),AC.currentTime,.5)}}
 sT-=dt;if(sT<0&&started){sT=5;S.x=P.x;S.z=P.z;save()}
-rd.render(sc,cam)}
+rd.shadowMap.needsUpdate=((frame.n=(frame.n||0)+1)&1)===0;rd.render(sc,cam)}
 /* ===== v3: home, bike, Taj, boats, context buttons, food, character ===== */
 const HX=-125,HZ=-52,TX=150,TZ=-100,TH=THREE;
 function say(n,txt){const[d,hi]=txt.split('|');toast(n.n+': “'+d+'”');n.c.talk=Math.min(4,hi.length*.08);if(!S.voice||S.mute||!window.speechSynthesis)return;try{const ss=speechSynthesis;ss.cancel();ss.resume();setTimeout(()=>{const u=new SpeechSynthesisUtterance(hi),v=vFor(n);u.lang=v?v.lang:'hi-IN';if(v)u.voice=v;const k=n.k==='k',f=n.k==='f';u.pitch=k?1.3:f?1.1:.9;u.rate=k?1.02:.9;u.volume=clamp(S.vM*S.vS+.25,0,1);ss.speak(u)},120)}catch(e){}}
@@ -1683,7 +1684,7 @@ function mkSuper(){
  const sh={n:'Mega Mart',x:-344.3,z:-50.4,fx:-344.3,it:['chips','biscuit','choco','water','juice','apple','banana','cola','energy','coffee','shake','lemon'],kl:'Mega Mart mein swagat hai! Jo chahiye le lo, bill yahin.|मेगा मार्ट में स्वागत है! जो चाहिए ले लो, बिल यहीं।',pay:1,k:'Cashier Meena',c:0,c2:0,mc:'#8ac040',mi:'🛒',cat:'food'};
  SH.push(sh);NW.shops.push(sh);NW.mart=sh;
  const o=addNPC('Cashier Meena','f',-346.9,-52.9,0x2f7a3a,0x2a2a33,0x1a1a1a,'m',0);o.fix=1;o.ry=HP;o.shop=sh;o.far=1;o.r=0;
- const lt=new THREE.PointLight(0xfff0d8,.9,18);lt.position.set(cx,4.6,cz);lt.visible=false;g.add(lt);NW.smL=lt;
+ const lt=new THREE.PointLight(0xfff0d8,.9,18);lt.position.set(cx,4.6,cz);lt.intensity=0;g.add(lt);NW.smL=lt;NW.smI=.9;
  /* automatic sliding doors at the real entrance */
  const gm=new THREE.MeshStandardMaterial({color:0x9fd8ee,transparent:true,opacity:.35,roughness:.1,metalness:.3,side:THREE.DoubleSide,depthWrite:false}),fm=M(0x444a52,{metalness:.6,roughness:.4});
  const dw=(SM.dz1-SM.dz0)/2,dc=(SM.dz0+SM.dz1)/2;NW.doors=[];
@@ -1696,7 +1697,7 @@ function stepDoor(dt){if(!NW.doors)return;const near=(P.x>-348&&P.x<-336.5&&P.z>
  NW.doorAmt+=((near?1:0)-NW.doorAmt)*Math.min(1,dt*4.5);const a=NW.doorAmt;
  for(const d of NW.doors)d.position.z=d.userData.z0+d.userData.s*a*((SM.dz1-SM.dz0)/2-.1);
  const dc=NW.doorCol;if(a>.55){dc[0]=dc[1]=dc[2]=dc[3]=0}else{dc[0]=SM.dx-.2;dc[1]=SM.dz0;dc[2]=SM.dx+.05;dc[3]=SM.dz1}
- if(NW.smL)NW.smL.visible=P.x>-353&&P.x<-339&&P.z>SM.z0-2&&P.z<SM.z1+2}
+ if(NW.smL)NW.smL.intensity=(P.x>-353&&P.x<-339&&P.z>SM.z0-2&&P.z<SM.z1+2)?NW.smI:0}
 
 function initShops(){for(const s of SHOPS)mkShop(s);for(const v of VENDS){if(v.force||!bigCol(v.x,v.z))mkVendSpot(v);else console.warn('vend skipped',v.x,v.z)}
  sf('super',mkSuper);mkGarage();
