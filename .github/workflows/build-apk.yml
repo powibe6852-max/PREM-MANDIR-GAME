@@ -11,7 +11,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
 
@@ -24,40 +24,46 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Prepare web assets (join game parts + localise libs)
-        run: bash scripts/prepare_www.sh
-
-      - name: Install Capacitor
-        run: npm install --no-audit --no-fund
-
-      - name: Create Android project
-        run: npx cap add android
-
-      - name: Patch Android project (permissions, icon, fullscreen)
-        run: bash scripts/patch_android.sh
-
-      - name: Sync web assets
-        run: npx cap sync android
-
-      - name: Build debug APK
-        working-directory: android
+      - name: Build APK (full log saved to logs/)
+        shell: bash
         run: |
-          chmod +x gradlew
-          ./gradlew assembleDebug --no-daemon --stacktrace
+          mkdir -p logs out
+          bash scripts/build.sh 2>&1 | tee logs/build-full.log
 
-      - name: Rename APK
+      - name: Failure summary
+        if: failure()
+        shell: bash
         run: |
-          mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/PremMandirDiwali.apk
-          ls -lh out
+          {
+            echo "## BUILD FAILED"
+            echo "Full logs: Artifacts -> build-logs"
+            echo '### Error lines'
+            echo '```'
+            grep -n -E "error:|FAILURE|What went wrong|Exception|ERR!|FAILED at" logs/build-full.log | head -40 || true
+            echo '```'
+            echo '### Last 60 lines'
+            echo '```'
+            tail -n 60 logs/build-full.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload APK artifact
+      - name: Upload logs (always)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs
+          path: logs/
+          if-no-files-found: warn
+
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: PremMandirDiwali-apk
           path: out/PremMandirDiwali.apk
+          if-no-files-found: error
 
       - name: Publish to GitHub Release
+        continue-on-error: true
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}

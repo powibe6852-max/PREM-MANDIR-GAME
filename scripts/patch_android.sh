@@ -1,35 +1,38 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Eeuo pipefail
 A=android/app/src/main
-M=$A/AndroidManifest.xml
 
-# Permissions (mic for voice chat) + big heap for the 90MB game
 python3 - <<'PY'
 p="android/app/src/main/AndroidManifest.xml"
-s=open(p).read()
-perms='''    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
-    <uses-feature android:name="android.hardware.microphone" android:required="false" />
-'''
-if "RECORD_AUDIO" not in s:
-    s=s.replace("</manifest>",perms+"</manifest>")
-s=s.replace("<application","<application android:largeHeap=\"true\" android:hardwareAccelerated=\"true\"",1)
-s=s.replace("<activity","<activity android:screenOrientation=\"fullUser\"",1) if "screenOrientation" not in s else s
-open(p,"w").write(s)
+s=open(p,encoding="utf-8").read()
+perms=""
+for n in ["RECORD_AUDIO","MODIFY_AUDIO_SETTINGS","VIBRATE","WAKE_LOCK"]:
+    if f"android.permission.{n}" not in s:
+        perms+=f'    <uses-permission android:name="android.permission.{n}" />\n'
+if "android.hardware.microphone" not in s:
+    perms+='    <uses-feature android:name="android.hardware.microphone" android:required="false" />\n'
+s=s.replace("</manifest>",perms+"</manifest>")
+attrs=""
+if "android:largeHeap" not in s: attrs+=' android:largeHeap="true"'
+if "android:hardwareAccelerated" not in s: attrs+=' android:hardwareAccelerated="true"'
+s=s.replace("<application","<application"+attrs,1)
+if "android:screenOrientation" not in s:
+    s=s.replace("<activity",'<activity android:screenOrientation="fullUser"',1)
+open(p,"w",encoding="utf-8").write(s)
+print("manifest patched")
 PY
 
-# Icons
+# icons (legacy png icons for every density)
 rm -rf $A/res/mipmap-anydpi-v26
 for d in mdpi hdpi xhdpi xxhdpi xxxhdpi; do
   mkdir -p $A/res/mipmap-$d
   cp resources/android/mipmap-$d/*.png $A/res/mipmap-$d/
 done
 
-# Fullscreen immersive MainActivity
-PKG_DIR=$A/java/com/premmandir/diwali
-mkdir -p $PKG_DIR
-cat > $PKG_DIR/MainActivity.java <<'JAVA'
+# fullscreen + keep screen on
+D=$A/java/com/premmandir/diwali
+mkdir -p "$D"
+cat > "$D/MainActivity.java" <<'JAVA'
 package com.premmandir.diwali;
 
 import android.os.Bundle;
@@ -61,6 +64,9 @@ public class MainActivity extends BridgeActivity {
 }
 JAVA
 
-# Gradle memory for the huge asset
-echo "org.gradle.jvmargs=-Xmx4g -Dfile.encoding=UTF-8" >> android/gradle.properties
-echo "android.enableJetifier=false" >> android/gradle.properties
+# gradle memory: replace existing line, always start on a fresh line
+GP=android/gradle.properties
+touch "$GP"
+sed -i '/^org\.gradle\.jvmargs/d' "$GP"
+printf '\norg.gradle.jvmargs=-Xmx3g -Dfile.encoding=UTF-8\n' >> "$GP"
+echo "patch done"

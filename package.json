@@ -2,7 +2,6 @@
   "name": "prem-mandir-diwali",
   "version": "1.0.0",
   "private": true,
-  "description": "Prem Mandir Diwali Mela 3D - Android APK wrapper",
   "dependencies": {
     "@capacitor/android": "^6.2.0",
     "@capacitor/core": "^6.2.0"

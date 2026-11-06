@@ -1,17 +1,14 @@
-# Prem Mandir Diwali Mela 3D — APK build
+# Prem Mandir Diwali Mela 3D — APK build (v40)
 
-1. Is zip ko apni repo me extract karo (root me) aur push karo (`main` branch).
-2. GitHub → **Actions** tab → "Build Prem Mandir APK" apne aap chalega (ya "Run workflow").
-3. 8-15 min baad: **Releases** me `PremMandirDiwali.apk` milegi (ya Actions run → Artifacts).
-4. APK phone me install karo ("Install unknown apps" allow karna padega).
+## Steps
+1. Zip ko repo ke **root** me extract karo (folder ke andar nahi). Purana `game/` folder ho to delete kar do.
+   `.github/workflows/build-apk.yml` same naam ka hai, purane ko replace karega.
+2. Commit + push (`main`/`master`). Actions tab me "Build Prem Mandir APK" chalega (ya Run workflow).
+3. Success: **Releases** me `PremMandirDiwali.apk` (ya Actions run -> Artifacts).
+4. Fail: Actions run -> Artifacts -> **build-logs** download karke bhej do (`build-full.log` me sab kuch hai).
+   Run page ke Summary me error lines bhi dikhengi.
 
-## Game update karna
-- Naya HTML aaye to `game/index.html` naam se rakh do (ye parts se pehle use hota hai)
-  aur purane `game/part_*` delete kar do. Note: GitHub web upload 25MB tak hi leta hai,
-  isliye bade file ke liye git push / parts use karo.
-- Ya `split -b 20M -d -a 3 naya.html game/part_` se parts bana lo.
-
-## Notes
-- App ID: `com.premmandir.diwali`, debug-signed APK (direct install ke liye).
-- Mic permission voice chat ke liye, fullscreen + screen-on enabled.
-- three.js/GLTFLoader/PeerJS build time pe download hote hain; multiplayer ke liye internet chahiye.
+## Game update
+Naya single HTML `game/index.html` naam se daal do -> build apne aap `web/` me split kar dega.
+(GitHub web upload 25MB tak hi leta hai, bade file ke liye git push use karo.)
+Ya khud: `python3 tools/split_game.py naya.html web`
