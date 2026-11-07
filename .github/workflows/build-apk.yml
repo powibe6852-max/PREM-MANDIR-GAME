@@ -1,4 +1,4 @@
-name: Build Prem Mandir APK
+name: Build Indian GTA APK
 
 on:
   push:
@@ -58,8 +58,8 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: PremMandirDiwali-apk
-          path: out/PremMandirDiwali.apk
+          name: IndianGTA-apk
+          path: out/IndianGTA.apk
           if-no-files-found: error
 
       - name: Publish to GitHub Release
@@ -67,5 +67,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
-          name: Prem Mandir Diwali build ${{ github.run_number }}
-          files: out/PremMandirDiwali.apk
+          name: Indian GTA build ${{ github.run_number }}
+          files: out/IndianGTA.apk

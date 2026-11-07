@@ -1,4 +1,4 @@
-# Prem Mandir Diwali Mela 3D — APK build (v40)
+# Prem Mandir Diwali Mela 3D — APK build (v50)
 
 ## Steps
 1. Zip ko repo ke **root** me extract karo (folder ke andar nahi). Purana `game/` folder ho to delete kar do. `resources/icons` aur `web/js` folders bhi repo me hone chahiye.

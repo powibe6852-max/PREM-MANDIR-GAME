@@ -78,6 +78,6 @@ cd ..
 stage "COLLECT APK"
 APK=android/app/build/outputs/apk/debug/app-debug.apk
 test -f "$APK"
-cp "$APK" out/PremMandirDiwali.apk
+cp "$APK" out/IndianGTA.apk
 ls -lh out
 echo "BUILD OK"

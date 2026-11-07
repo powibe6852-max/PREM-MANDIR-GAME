@@ -1,7 +1,7 @@
 {
   "appId": "com.premmandir.diwali",
-  "appName": "Prem Mandir Diwali",
+  "appName": "Indian GTA Multiplayer",
   "webDir": "www",
   "server": { "androidScheme": "https" },
-  "android": { "allowMixedContent": true, "webContentsDebuggingEnabled": true }
+  "android": { "allowMixedContent": true, "webContentsDebuggingEnabled": false }
 }
